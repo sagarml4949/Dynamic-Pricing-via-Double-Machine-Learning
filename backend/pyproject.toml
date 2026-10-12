@@ -1,0 +1,44 @@
+[project]
+name = "econocausal"
+version = "0.1.0"
+description = "Dynamic Pricing via Double Machine Learning"
+requires-python = "==3.11.*"
+dependencies = [
+    "fastapi==0.115.6",
+    "uvicorn==0.34.0",
+    "pydantic==2.10.4",
+    "pandas==2.2.3",
+    "numpy==1.26.4",
+    "pyarrow==18.1.0",
+    "pandera==0.22.1",
+    "scikit-learn==1.5.2",
+    "scipy==1.14.1",
+    "lightgbm==4.5.0",
+    "econml==0.16.0",
+    "dowhy==0.12",
+    "datasets==3.2.0",
+    "huggingface_hub==0.27.1",
+    "scikit-uplift==0.5.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.4", "hypothesis==6.124.0", "ruff==0.8.4", "mypy==1.13.2", "httpx==0.28.1"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["backend/src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
