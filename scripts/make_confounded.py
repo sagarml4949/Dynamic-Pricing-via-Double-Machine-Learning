@@ -34,10 +34,14 @@ def load_base(n: int, seed: int) -> pd.DataFrame:
     return df
 
 
-def confound(df: pd.DataFrame, seed: int, keep_lo: float = 0.15) -> pd.DataFrame:
+def confound(df: pd.DataFrame, seed: int, keep_lo: float = 0.15,
+             direction: str = "low") -> pd.DataFrame:
     rng = np.random.default_rng(seed + 1)
     rank = df["f0"].rank(pct=True).to_numpy()
-    keep_p = keep_lo + (1 - keep_lo) * rank
+    if direction == "low":
+        keep_p = keep_lo + (1 - keep_lo) * (1 - rank)  # keep treated LOW-f0
+    else:
+        keep_p = keep_lo + (1 - keep_lo) * rank
     keep_p[df["treatment"].to_numpy() == 0] = 1.0  # controls untouched
     keep = rng.random(len(df)) < keep_p
     out = df.loc[keep].reset_index(drop=True)
@@ -53,13 +57,16 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--n", type=int, default=200_000)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--direction", choices=["high", "low"], default="low",
+                       help="high=keep treated high-f0 (old, bias went negative); "
+                            "low=keep treated low-f0 so naive OVERSTATES lift (classic story)")
     p.add_argument("--out", type=str, default="data/processed/criteo_confounded.parquet")
     a = p.parse_args()
 
     base = load_base(a.n, a.seed)
     rct_lift_visit = naive_lift(base, "visit")
     rct_lift_conv = naive_lift(base, "conversion")
-    conf = confound(base, a.seed)
+    conf = confound(base, a.seed, direction=a.direction)
     conf_lift_visit = naive_lift(conf, "visit")
     conf_lift_conv = naive_lift(conf, "conversion")
 

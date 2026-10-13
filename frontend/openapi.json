@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "EconoCausal",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "paths": {
     "/v1/runs": {
@@ -19,6 +19,43 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/fit": {
+      "post": {
+        "summary": "Fit Run",
+        "operationId": "fit_run_v1_runs__run_id__fit_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -235,6 +272,31 @@
             "exclusiveMinimum": 0.0,
             "title": "Margin",
             "default": 20.0
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "simulator",
+              "criteo"
+            ],
+            "title": "Source",
+            "default": "simulator"
+          },
+          "n_rows": {
+            "type": "integer",
+            "maximum": 200000.0,
+            "minimum": 1000.0,
+            "title": "N Rows",
+            "default": 20000
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "visit",
+              "conversion"
+            ],
+            "title": "Target",
+            "default": "visit"
           }
         },
         "type": "object",

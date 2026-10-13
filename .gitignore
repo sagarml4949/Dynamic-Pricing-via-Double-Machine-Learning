@@ -1,6 +1,9 @@
 data/raw/
 data/processed/
+data/registry/
 .env
 __pycache__/
 *.pyc
+.pytest_cache/
 .venv/
+
