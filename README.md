@@ -20,5 +20,4 @@ python scripts/make_confounded.py --n 200000 --seed 42
 
 ## Privacy
 
-Private repo until company approves otherwise. Never commit tokens (`.env`),
-raw/processed data (`data/` is gitignored), or confidential internship docs.
+Private repo until company approves otherwise.
