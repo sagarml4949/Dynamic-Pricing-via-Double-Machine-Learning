@@ -41,6 +41,115 @@
         }
       }
     },
+    "/v1/graph/identify": {
+      "post": {
+        "summary": "Graph Identify",
+        "operationId": "graph_identify_v1_graph_identify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/nl/query": {
+      "post": {
+        "summary": "Nl Query",
+        "operationId": "nl_query_v1_nl_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NLRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{run_id}/calibration": {
+      "get": {
+        "summary": "Run Calibration",
+        "operationId": "run_calibration_v1_runs__run_id__calibration_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/runs/{run_id}/fit": {
       "post": {
         "summary": "Fit Run",
@@ -192,6 +301,21 @@
   },
   "components": {
     "schemas": {
+      "GraphRequest": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "simulator",
+              "criteo"
+            ],
+            "title": "Source",
+            "default": "simulator"
+          }
+        },
+        "type": "object",
+        "title": "GraphRequest"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -204,6 +328,19 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "NLRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "NLRequest"
       },
       "RunConfig": {
         "properties": {

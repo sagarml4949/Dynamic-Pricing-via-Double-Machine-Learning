@@ -42,6 +42,67 @@ def create_run(cfg: RunConfig):
     return {"run_id": run_id, "status": "created", "config": cfg.model_dump()}
 
 
+class GraphRequest(BaseModel):
+    source: Literal["simulator", "criteo"] = "simulator"
+
+
+@app.post("/v1/graph/identify")
+def graph_identify(req: GraphRequest):
+    _pkg()
+    from econocausal.causal.dml import identify
+    feats = (["lapsed", "value", "tenure", "z1", "z2"] if req.source == "simulator"
+             else [f"f{i}" for i in range(12)])
+    return identify(feats)
+
+
+class NLRequest(BaseModel):
+    query: str
+
+
+@app.post("/v1/nl/query")
+def nl_query(req: NLRequest):
+    _pkg()
+    from econocausal.nl.intent import parse
+    cfg = parse(req.query)
+    try:
+        validated = RunConfig(**cfg).model_dump()
+        valid = True
+    except Exception as e:
+        validated, valid = cfg, False
+        _err = str(e)
+    return {"intent": cfg, "run_config": validated, "valid": valid}
+
+
+@app.get("/v1/runs/{run_id}/calibration")
+def run_calibration(run_id: str):
+    run = _RUNS.get(run_id)
+    if run is None:
+        raise HTTPException(404, "unknown run_id")
+    if run.get("tau") is None:
+        raise HTTPException(409, "run not fitted: POST /v1/runs/{id}/fit first")
+    _pkg()
+    import numpy as np
+    import pandas as pd
+    from econocausal.evaluate.calibration import calibration_by_decile
+    cfg = run["config"]
+    # rebuild eval frame deterministically to join tau ranks with outcomes
+    if cfg["source"] == "simulator":
+        from econocausal.data.simulate import simulate
+        df = simulate(cfg["n_rows"], cfg["seed"])
+    else:
+        df = pd.read_parquet("data/processed/criteo_confounded.parquet")
+        df = df.rename(columns={"treatment": "T", "visit": "Y", "conversion": "Yc"})
+        df["Y"] = df["Y"] if cfg["target"] == "visit" else df["Yc"]
+        if len(df) > cfg["n_rows"]:
+            df = df.sample(cfg["n_rows"], random_state=cfg["seed"]).reset_index(drop=True)
+    from econocausal.data.splits import split
+    ev = split(df, seed=cfg["seed"])["eval"].reset_index(drop=True)
+    tau = np.asarray(run["tau"])
+    cal = calibration_by_decile(ev, tau, y="Y")
+    return {"run_id": run_id,
+            "deciles": cal.to_dict(orient="records")}
+
+
 @app.post("/v1/runs/{run_id}/fit")
 def fit_run(run_id: str):
     run = _RUNS.get(run_id)
