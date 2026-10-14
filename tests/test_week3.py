@@ -6,7 +6,7 @@ sys.path.insert(0, str(Path("backend/src").resolve()))
 import numpy as np
 import pandas as pd
 from econocausal.causal.dml import build_graph, identify
-from econocausal.causal.intervals import coverage, residual_band
+from econocausal.causal.intervals import bootstrap_interval, coverage
 from econocausal.causal.propensity import overlap_gate
 from econocausal.data.schemas import validate
 from econocausal.evaluate.calibration import calibration_by_decile
@@ -34,10 +34,21 @@ def test_nl_parses_estimator_budget_source():
 
 
 def test_intervals_cover_and_band():
-    tau = np.array([0.1, 0.2, 0.3])
-    lo, hi = residual_band(tau, np.array([1, 0, 1]), np.array([1, 0, 1]))
-    assert ((lo <= tau) & (tau <= hi)).all()
     assert coverage(np.array([0.15]), np.array([0.0]), np.array([0.2])) == 1.0
+    assert coverage(np.array([5.0]), np.array([0.0]), np.array([0.2])) == 0.0
+
+
+def test_bootstrap_interval_honest():
+    from econocausal.data.simulate import simulate
+    from econocausal.data.splits import split
+    from econocausal.causal.learners import SLearner
+    df = simulate(1500, seed=11)
+    F = ["lapsed", "value", "tenure", "z1", "z2"]
+    p = split(df, seed=11)
+    mean, lo, hi = bootstrap_interval(
+        lambda d, f: SLearner(11).fit(d, f), p["train"], p["eval"], F,
+        B=10, seed=11)
+    assert len(mean) == len(p["eval"]) and ((lo <= mean) & (mean <= hi)).all()
 
 
 def test_qini_and_policy_table():

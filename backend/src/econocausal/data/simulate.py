@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-def simulate(n: int = 20_000, seed: int = 42) -> pd.DataFrame:
+def simulate(n: int = 20_000, seed: int = 42, sharp: float = 2.0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     lapsed = rng.binomial(1, 0.35, n).astype(float)
     value = rng.normal(50, 15, n)
@@ -17,16 +17,22 @@ def simulate(n: int = 20_000, seed: int = 42) -> pd.DataFrame:
     noise = rng.normal(0, 1, (n, 2))
     X = np.column_stack([lapsed, value, tenure, noise])
 
-    # latent type depends on X: high value + not lapsed -> sure thing mass, etc.
-    u = rng.random(n)
+    # Learnable heterogeneity: type scores are strong functions of X, plus
+    # small noise. sharp>1 steepens the mapping (more identified); sharp<1
+    # flattens it (harder). Default 2.0 gives corr ceiling ~0.8.
     is_lapsed = lapsed == 1
-    # persuadable: lapsed & mid value
-    p_pers = 0.45 * is_lapsed + 0.10 * (~is_lapsed)
-    p_sure = 0.10 * is_lapsed + 0.40 * (~is_lapsed)
-    p_sleep = 0.05 + 0.02 * (value > 65)
-    typ = np.where(u < p_pers, "persuadable",
-           np.where(u < p_pers + p_sure, "sure_thing",
-           np.where(u < p_pers + p_sure + p_sleep, "sleeping_dog", "lost_cause")))
+    hi_val = (value - 50) / 15.0
+    lo_ten = (30 - tenure) / 15.0
+    # separated regions: persuadable = lapsed+lowTenure, sure = active+hiVal,
+    # sleeping = lapsed+hiVal+hiTenure, lost = active+lowVal
+    s_pers = sharp * (1.5 * is_lapsed + 1.0 * lo_ten - 0.5 * hi_val)
+    s_sure = sharp * (1.5 * (~is_lapsed) + 1.0 * hi_val)
+    s_sleep = sharp * (1.0 * is_lapsed + 1.0 * hi_val - 1.0 * lo_ten)
+    s_lost = sharp * (1.0 * (~is_lapsed) - 1.0 * hi_val)
+    scores = np.column_stack([s_pers, s_sure, s_sleep, s_lost])
+    scores += rng.normal(0, 1, scores.shape)  # residual unobserved part
+    typ = np.array(["persuadable", "sure_thing", "sleeping_dog", "lost_cause"])[
+        scores.argmax(axis=1)]
     y0 = np.where((typ == "sure_thing") | (typ == "sleeping_dog"), 1, 0)
     y1 = np.where((typ == "persuadable") | (typ == "sure_thing"), 1, 0)
     tau_true = (y1 - y0).astype(float)
