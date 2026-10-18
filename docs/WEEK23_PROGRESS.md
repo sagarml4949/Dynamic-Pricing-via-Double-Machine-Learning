@@ -77,3 +77,13 @@ Bake-off default lowered $5 → $0.10; at $5 the honest answer is "don't spend"
 - Conversion-target CV (money metric may carry more signal).
 - React dashboard (only big-ticket item left; API serves everything).
 - DoWhy real-refuter validation, Docker/uv.lock/py3.11, repo visibility check.
+
+## 11. Forest validation verdict (18 Oct, single 60/20/20 split, n=20k, seed 42)
+- Forest: PEHE 0.3772, ATE err 0.0015, AUUC 0.1801, corr 0.828, fit 9s.
+- Sits between X-learner (PEHE 0.370) and S-learner (0.371) — competitive,
+  not dominant. Primary status justified by honest-split structure + interval
+  support, NOT by a PEHE lead. Full 5-fold forest CV still open (slow).
+- Interval labeling rule (binding): no band is shown without its MEASURED
+  coverage from sim CV. Analytic ~45-55%, bootstrap ~51%, DR-conformal 100%
+  at vacuous width. Dashboard renders band + measured number, never "95%".
+
