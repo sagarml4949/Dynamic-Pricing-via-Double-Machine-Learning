@@ -98,3 +98,12 @@ Bake-off default lowered $5 → $0.10; at $5 the honest answer is "don't spend"
   not part of point-estimate CV). Fast 5-fold rerunning in background.
 
 
+## 13. Forest full 5-fold FINAL (19 Oct, 100 trees, skip-intervals, n=20k)
+- PEHE 0.3691+-0.0064 | AUUC 0.1905+-0.0117 | ATE err 0.0078+-0.0083 |
+  DR-R2 0.4110+-0.0082. ~8-19s/fold without bootstrap (vs 140-666s with).
+- Ranking: forest 0.369 > X 0.370 > S 0.371 > T 0.388 > LinearDML 0.501.
+  Forest is best but the gap to X/S (~0.001-0.002) is within fold noise —
+  verdict stays "competitive, not dominant". Primary status rests on
+  honest-split structure, not a PEHE lead.
+
+
