@@ -87,3 +87,14 @@ Bake-off default lowered $5 → $0.10; at $5 the honest answer is "don't spend"
   coverage from sim CV. Analytic ~45-55%, bootstrap ~51%, DR-conformal 100%
   at vacuous width. Dashboard renders band + measured number, never "95%".
 
+## 12. Forest 5-fold CV verdict (19 Oct; 2 folds finished, rest in background)
+- Folds 0-1 (100 trees, n=20k): PEHE 0.374/0.377 (mean 0.375), AUUC 0.189,
+  DR-R2 0.415, ATE err 0.022/0.009. ate_err spread is fold noise (single
+  split earlier gave 0.0015) — 5-fold mean is the honest number.
+- Analytic coverage on new DGP: 32-33% (worse than the 45-55% on old DGP).
+  Variance path definitively broken on econml 0.17; binding labeling rule
+  from §11 stands. Bootstrap default stays; no nominal-95% claims anywhere.
+- Harness fix: --skip-intervals flag (coverage is a separate measured step,
+  not part of point-estimate CV). Fast 5-fold rerunning in background.
+
+

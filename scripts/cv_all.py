@@ -68,7 +68,7 @@ def evaluate_fold(df_te, tau, mu1, mu0, e, has_truth, y="Y"):
 
 
 def run_cv(df, feats, models, n_splits=5, seed=42, y="Y",
-           has_truth=False, fast=False):
+           has_truth=False, fast=False, skip_intervals=False):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     T = df["T"].to_numpy()
     per_model: dict = {m: [] for m in models}
@@ -84,7 +84,7 @@ def run_cv(df, feats, models, n_splits=5, seed=42, y="Y",
             est.fit(dtr, feats, y)
             tau = np.asarray(est.predict_tau(dte)).ravel()
             fr = evaluate_fold(dte, tau, mu1, mu0, e, has_truth, y)
-            if hasattr(est, "predict_interval"):
+            if hasattr(est, "predict_interval") and not skip_intervals:
                 try:
                     lo, hi = est.predict_interval(dte)
                     lo, hi = np.asarray(lo).ravel(), np.asarray(hi).ravel()
@@ -132,6 +132,8 @@ def main():
     p.add_argument("--folds", type=int, default=5)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--fast", action="store_true")
+    p.add_argument("--skip-intervals", action="store_true",
+                   help="skip predict_interval in CV (coverage measured separately)")
     p.add_argument("--models", nargs="*", default=["s_learner", "t_learner",
                  "x_learner", "linear_dml", "causal_forest"])
     a = p.parse_args()
@@ -146,7 +148,8 @@ def main():
             df = df.sample(a.n, random_state=a.seed).reset_index(drop=True)
         feats, y, truth = CRI_FEATS, "Y", False
     print(f"CV {a.source} n={len(df)} folds={a.folds} models={a.models}")
-    res = run_cv(df, feats, a.models, a.folds, a.seed, y, truth, a.fast)
+    res = run_cv(df, feats, a.models, a.folds, a.seed, y, truth, a.fast,
+                 skip_intervals=a.skip_intervals)
     out = Path("data/registry") / f"cv-{a.source}-s{a.seed}"
     out.mkdir(parents=True, exist_ok=True)
     (out / "summary.json").write_text(json.dumps(
