@@ -136,6 +136,8 @@ def main():
                    help="skip predict_interval in CV (coverage measured separately)")
     p.add_argument("--models", nargs="*", default=["s_learner", "t_learner",
                  "x_learner", "linear_dml", "causal_forest"])
+    p.add_argument("--target", choices=["visit", "conversion"], default="visit",
+                   help="criteo outcome: visit (dense) or conversion (money metric)")
     a = p.parse_args()
     if a.source == "sim":
         from econocausal.data.simulate import simulate
@@ -143,18 +145,19 @@ def main():
         feats, y, truth = SIM_FEATS, "Y", True
     else:
         df = pd.read_parquet("data/processed/criteo_confounded.parquet")
-        df = df.rename(columns={"treatment": "T", "visit": "Y"})
+        df = df.rename(columns={"treatment": "T", "visit": "Y", "conversion": "Yc"})
+        df["Y"] = df["Y"] if a.target == "visit" else df["Yc"]
         if len(df) > a.n:
             df = df.sample(a.n, random_state=a.seed).reset_index(drop=True)
         feats, y, truth = CRI_FEATS, "Y", False
-    print(f"CV {a.source} n={len(df)} folds={a.folds} models={a.models}")
+    print(f"CV {a.source}/{a.target} n={len(df)} folds={a.folds} models={a.models}")
     res = run_cv(df, feats, a.models, a.folds, a.seed, y, truth, a.fast,
                  skip_intervals=a.skip_intervals)
-    out = Path("data/registry") / f"cv-{a.source}-s{a.seed}"
+    out = Path("data/registry") / f"cv-{a.source}-{a.target}-s{a.seed}"
     out.mkdir(parents=True, exist_ok=True)
     (out / "summary.json").write_text(json.dumps(
         {"summary": res["summary"], "comparison": res["comparison"],
-         "source": a.source, "n": len(df)}, indent=2))
+         "source": a.source, "target": a.target, "n": len(df)}, indent=2))
     print(json.dumps(res["comparison"], indent=2))
     for m, agg in res["summary"].items():
         print(f"{m:13s} " + " ".join(

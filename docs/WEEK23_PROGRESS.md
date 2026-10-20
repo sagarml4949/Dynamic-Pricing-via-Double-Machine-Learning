@@ -107,3 +107,11 @@ Bake-off default lowered $5 → $0.10; at $5 the honest answer is "don't spend"
   honest-split structure, not a PEHE lead.
 
 
+## 14. Conversion-target CV (money metric, 19-20 Oct, n=60k, 5-fold)
+- DR-R2: forest +0.0023+-0.0158 (only positive) / S -0.0027 / DML -0.0049 /
+  X -0.0135 / T -0.0374. AUUC ~0.001-0.002 for all. R-scores negative.
+- Verdict: conversion carries no more learnable signal than visit at this
+  n — sparser outcome cancels the money-metric advantage. Criteo story stays
+  "weak heterogeneity, honest ranking, illustrative dollars".
+
+
